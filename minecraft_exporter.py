@@ -124,6 +124,19 @@ class MinecraftCollector(object):
             entityregex = re.compile("(\d+): (.*?:.*?)\s")
             for entitycount, entityname in entityregex.findall(resp):
                 entities.add_sample('entities', value=entitycount, labels={'entity': entityname})
+        # [Fabric TPS](https://modrinth.com/mod/fabric-tps) mod required
+        if 'FABRIC_SERVER' in os.environ and os.environ['FABRIC_SERVER'] == "True":
+            # dimensions [Fabric TPS](https://modrinth.com/mod/fabric-tps) mod
+            resp = self.rcon_command("fabric tps")
+            dimtpsregex = re.compile("Dim (.*?)\s\((.*?)\):\sMean tick time:\s(.*?) ms\. Mean TPS: (\d*\.\d*)")
+            for dimid, dimname, meanticktime, meantps in dimtpsregex.findall(resp):
+                dim_tps.add_sample('dim_tps', value=meantps, labels={'dimension_id': dimid, 'dimension_name': dimname})
+                dim_ticktime.add_sample('dim_ticktime', value=meanticktime,
+                                        labels={'dimension_id': dimid, 'dimension_name': dimname})
+            overallregex = re.compile("Overall\s?: Mean tick time: (.*) ms. Mean TPS: (.*)")
+            overall_tps.add_sample('overall_tps', value=overallregex.findall(resp)[0][1], labels={})
+            overall_ticktime.add_sample('overall_ticktime', value=overallregex.findall(resp)[0][0], labels={})
+
 
         # dynmap
         if 'DYNMAP_ENABLED' in os.environ and os.environ['DYNMAP_ENABLED'] == "True":
